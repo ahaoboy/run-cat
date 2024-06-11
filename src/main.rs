@@ -20,7 +20,7 @@ fn load_icon(buf: &[u8]) -> tray_icon::Icon {
     tray_icon::Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to open icon")
 }
 
-const FPS_STEPS: [(u64, u64); 5] = [(20, 10), (40, 15), (60, 20), (80, 25), (100, 30)];
+const FPS_STEPS: [(u64, u64); 5] = [(20, 5), (40, 10), (60, 15), (80, 20), (100, 25)];
 
 fn get_fps(cpu: f32) -> u64 {
     for (percent, fps) in FPS_STEPS {

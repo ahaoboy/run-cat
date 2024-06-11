@@ -20,6 +20,7 @@ Copy-Item "$HOME/.cargo/bin/run-cat.exe" "$HOME/AppData/Roaming/Microsoft/Window
 
 ## todo
 - [ ] Support linux
+- [ ] Custom speed and icons
 - [ ] Automatic detection theme color
 - [ ] Optimize animation speed and CPU usage
 
