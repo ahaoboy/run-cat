@@ -14,6 +14,14 @@ image = "0.25.1"
 sysinfo = "0.30.12"
 winit="0.29"
 
+# [target."cfg(target_os = \"unix\")".dev-dependencies]
+# gtk = "0.18"
+[target."cfg(target_os = \"linux\")".dependencies]
+libappindicator = "0.9"
+dirs = "5"
+gtk = "0.18"
+
+
 # The profile that 'cargo dist' will build with
 [profile.dist]
 inherits = "release"

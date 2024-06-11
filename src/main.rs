@@ -1,14 +1,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-// Copyright 2022-2022 Tauri Programme within The Commons Conservancy
-// SPDX-License-Identifier: Apache-2.0
-// SPDX-License-Identifier: MIT
-#![allow(unused)]
 
 use tray_icon::{
-    menu::{AboutMetadata, Menu, MenuEvent, MenuItem, PredefinedMenuItem},
+    menu::{Menu, MenuEvent, MenuItem},
     TrayIconBuilder, TrayIconEvent,
 };
-use winit::event_loop::{ControlFlow, EventLoop, EventLoopBuilder};
+use winit::event_loop::{ControlFlow, EventLoop};
 
 use sysinfo::System;
 
@@ -39,16 +35,15 @@ fn main() {
     // Since winit doesn't use gtk on Linux, and we need gtk for
     // the tray icon to show up, we need to spawn a thread
     // where we initialize gtk and create the tray_icon
+    let app_icon = load_icon(include_bytes!("../assets/png/app32.png"));
     #[cfg(target_os = "linux")]
     std::thread::spawn(|| {
         use tray_icon::menu::Menu;
-
-        let icon = load_icon(std::path::Path::new(path));
-
+        let app_icon = load_icon(include_bytes!("../assets/png/app32.png"));
         gtk::init().unwrap();
         let _tray_icon = TrayIconBuilder::new()
             .with_menu(Box::new(Menu::new()))
-            .with_icon(icon)
+            .with_icon(app_icon.clone())
             .build()
             .unwrap();
 
@@ -81,30 +76,28 @@ fn main() {
     let dark_item = MenuItem::new("dark", true, None);
     let light_item = MenuItem::new("light", true, None);
 
-    tray_menu.append_items(&[&dark_item, &light_item, &quit_item]);
+    tray_menu.append_items(&[&dark_item, &light_item, &quit_item]).unwrap();
 
-    let app_icon = load_icon(include_bytes!("../assets/png/app32.png"));
     let tray_icon = TrayIconBuilder::new()
         .with_menu(Box::new(tray_menu))
         .with_tooltip("run cat~")
-        .with_icon(app_icon)
+        .with_icon(app_icon.clone())
         .build()
         .unwrap();
 
     let event_loop = EventLoop::new().unwrap();
     let menu_channel = MenuEvent::receiver();
-    let tray_channel = TrayIconEvent::receiver();
+    // let tray_channel = TrayIconEvent::receiver();
 
     let mut sys = System::new();
     sys.refresh_all();
     let mut last_update_ts = std::time::Instant::now();
 
-    let mut avg_cpu_usage = 0;
     let mut last_refresh_cpu = std::time::Instant::now();
     let cpu_gap = 300;
     let mut last_avg_cpu_usage = 0.;
 
-    event_loop.run(move |event, event_loop| {
+    event_loop.run(move |_, event_loop| {
         // We add delay of 16 ms (60fps) to event_loop to reduce cpu load.
         // This can be removed to allow ControlFlow::Poll to poll on each cpu cycle
         // Alternatively, you can set ControlFlow::Wait or use TrayIconEvent::set_event_handler,
@@ -140,7 +133,6 @@ fn main() {
 
         let fps: u64 = get_fps(avg);
         let ms = 1000 / fps;
-        let sleep_time = std::time::Duration::from_millis(ms);
 
         if last_update_ts.elapsed().as_millis() >= ms.into() {
             last_update_ts = now;
@@ -153,5 +145,5 @@ fn main() {
             c += 1;
             tray_icon.set_icon(Some(icon.clone())).unwrap();
         }
-    });
+    }).unwrap();
 }

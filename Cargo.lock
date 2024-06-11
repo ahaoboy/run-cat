@@ -1862,9 +1862,12 @@ dependencies = [
 
 [[package]]
 name = "run-cat"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
+ "dirs",
+ "gtk",
  "image",
+ "libappindicator",
  "sysinfo",
  "tray-icon",
  "winit",
