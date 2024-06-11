@@ -1,5 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::collections::VecDeque;
+
 use tray_icon::{
     menu::{Menu, MenuEvent, MenuItem},
     TrayIconBuilder,
@@ -20,7 +22,8 @@ fn load_icon(buf: &[u8]) -> tray_icon::Icon {
     tray_icon::Icon::from_rgba(icon_rgba, icon_width, icon_height).expect("Failed to open icon")
 }
 
-const FPS_STEPS: [(u64, u64); 5] = [(20, 5), (40, 10), (60, 15), (80, 20), (100, 25)];
+const FPS_STEPS: [(u64, u64); 5] = [(20, 5), (40, 10), (60, 20), (80, 25), (100, 30)];
+const CPU_USAGE_STACK_SIZE: usize = 8;
 
 fn get_fps(cpu: f32) -> u64 {
     for (percent, fps) in FPS_STEPS {
@@ -67,9 +70,7 @@ fn main() {
     ];
 
     let tray_menu = Menu::new();
-    // tray_menu.append_items("items");
     let mut c = 0;
-
     let mut theme = "dark";
 
     let quit_item = MenuItem::new("quit", true, None);
@@ -89,15 +90,19 @@ fn main() {
 
     let event_loop = EventLoop::new().unwrap();
     let menu_channel = MenuEvent::receiver();
-    // let tray_channel = TrayIconEvent::receiver();
 
     let mut sys = System::new();
     sys.refresh_all();
     let mut last_update_ts = std::time::Instant::now();
-
     let mut last_refresh_cpu = std::time::Instant::now();
-    let cpu_gap = 300;
-    let mut last_avg_cpu_usage = 0.;
+
+    // Since the effective refresh interval of CPU usage is 200ms
+    // and the default event execution of winit is 60 frames
+    // we use a queue to sample CPU usage to obtain smoother data.
+    let mut cpu_usage_stack = VecDeque::new();
+    cpu_usage_stack.push_back(0.);
+
+    let cpu_sample_gap = 250;
 
     event_loop
         .run(move |_, event_loop| {
@@ -124,14 +129,18 @@ fn main() {
             let now = std::time::Instant::now();
 
             sys.refresh_cpu();
-            let avg = if last_refresh_cpu.elapsed().as_millis() < cpu_gap {
-                last_avg_cpu_usage
+            let avg = if last_refresh_cpu.elapsed().as_millis() < cpu_sample_gap {
+                cpu_usage_stack.iter().sum::<f32>() / cpu_usage_stack.len() as f32
             } else {
                 last_refresh_cpu = now;
                 let avg =
                     sys.cpus().iter().map(|i| i.cpu_usage()).sum::<f32>() / sys.cpus().len() as f32;
-                last_avg_cpu_usage = avg;
-                avg
+                cpu_usage_stack.push_back(avg);
+
+                if cpu_usage_stack.len() > CPU_USAGE_STACK_SIZE {
+                    cpu_usage_stack.pop_front();
+                }
+                cpu_usage_stack.iter().sum::<f32>() / cpu_usage_stack.len() as f32
             };
 
             let fps: u64 = get_fps(avg);
@@ -145,7 +154,7 @@ fn main() {
                     _ => &dark_cat_icons,
                 };
                 let icon = &list[c % dark_cat_icons.len()];
-                c += 1;
+                c = (c + 1) % list.len();
                 tray_icon.set_icon(Some(icon.clone())).unwrap();
             }
         })
