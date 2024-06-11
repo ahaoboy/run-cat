@@ -19,8 +19,10 @@ libappindicator = "0.9"
 dirs = "5"
 gtk = "0.18"
 
+[target."cfg(target_os = \"windows\")".build-dependencies]
+winres = "0.1"
 
-# The profile that 'cargo dist' will build with
+
 [profile.dist]
 inherits = "release"
 lto = "thin"

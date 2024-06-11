@@ -1,5 +1,5 @@
+#[cfg(unix)]
 fn main() {
-    #[cfg(unix)]
     std::process::Command::new("apt")
         .args([
             "install",
@@ -11,4 +11,16 @@ fn main() {
         ])
         .status()
         .unwrap();
+}
+
+#[cfg(windows)]
+extern crate winres;
+
+#[cfg(windows)]
+fn main() {
+  if cfg!(target_os = "windows") {
+    let mut res = winres::WindowsResource::new();
+    res.set_icon("./assets/ico/app.ico");
+    res.compile().unwrap();
+  }
 }
