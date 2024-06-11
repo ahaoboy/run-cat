@@ -13,7 +13,7 @@ cargo binstall run-cat
 ## add to startup
 
 ### windows
-
+powershell
 ```powershell
 Copy-Item "$HOME/.cargo/bin/run-cat.exe" "$HOME/AppData/Roaming/Microsoft/Windows\Start Menu/Programs/Startup/run-cat.exe"
 ```
