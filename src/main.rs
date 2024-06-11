@@ -97,7 +97,6 @@ fn main() {
 
     let mut sys = System::new();
     sys.refresh_all();
-    std::thread::sleep(sysinfo::MINIMUM_CPU_UPDATE_INTERVAL);
     let mut last_update_ts = std::time::Instant::now();
 
     let mut avg_cpu_usage = 0;
@@ -115,7 +114,6 @@ fn main() {
         ));
 
         if let Ok(event) = menu_channel.try_recv() {
-            println!("{event:?}");
             if event.id == quit_item.id() {
                 std::process::exit(0);
             }
@@ -130,7 +128,6 @@ fn main() {
         let now = std::time::Instant::now();
 
         sys.refresh_cpu();
-        sys.refresh_all();
         let avg = if last_refresh_cpu.elapsed().as_millis() < cpu_gap {
             last_avg_cpu_usage
         } else {
