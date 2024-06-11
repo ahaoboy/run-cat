@@ -5,6 +5,7 @@ fn main() {
             "install",
             "libgtk-3-dev",
             "libxdo-dev",
+            "libpango1.0-dev",
             "libayatana-appindicator3-dev",
             "-y",
         ])

@@ -2,7 +2,7 @@
 
 use tray_icon::{
     menu::{Menu, MenuEvent, MenuItem},
-    TrayIconBuilder, TrayIconEvent,
+    TrayIconBuilder,
 };
 use winit::event_loop::{ControlFlow, EventLoop};
 
@@ -28,7 +28,7 @@ fn get_fps(cpu: f32) -> u64 {
             return fps;
         }
     }
-    return 30;
+    30
 }
 
 fn main() {
@@ -76,7 +76,9 @@ fn main() {
     let dark_item = MenuItem::new("dark", true, None);
     let light_item = MenuItem::new("light", true, None);
 
-    tray_menu.append_items(&[&dark_item, &light_item, &quit_item]).unwrap();
+    tray_menu
+        .append_items(&[&dark_item, &light_item, &quit_item])
+        .unwrap();
 
     let tray_icon = TrayIconBuilder::new()
         .with_menu(Box::new(tray_menu))
@@ -97,53 +99,55 @@ fn main() {
     let cpu_gap = 300;
     let mut last_avg_cpu_usage = 0.;
 
-    event_loop.run(move |_, event_loop| {
-        // We add delay of 16 ms (60fps) to event_loop to reduce cpu load.
-        // This can be removed to allow ControlFlow::Poll to poll on each cpu cycle
-        // Alternatively, you can set ControlFlow::Wait or use TrayIconEvent::set_event_handler,
-        // see https://github.com/tauri-apps/tray-icon/issues/83#issuecomment-1697773065
-        event_loop.set_control_flow(ControlFlow::WaitUntil(
-            std::time::Instant::now() + std::time::Duration::from_millis(16),
-        ));
+    event_loop
+        .run(move |_, event_loop| {
+            // We add delay of 16 ms (60fps) to event_loop to reduce cpu load.
+            // This can be removed to allow ControlFlow::Poll to poll on each cpu cycle
+            // Alternatively, you can set ControlFlow::Wait or use TrayIconEvent::set_event_handler,
+            // see https://github.com/tauri-apps/tray-icon/issues/83#issuecomment-1697773065
+            event_loop.set_control_flow(ControlFlow::WaitUntil(
+                std::time::Instant::now() + std::time::Duration::from_millis(16),
+            ));
 
-        if let Ok(event) = menu_channel.try_recv() {
-            if event.id == quit_item.id() {
-                std::process::exit(0);
+            if let Ok(event) = menu_channel.try_recv() {
+                if event.id == quit_item.id() {
+                    std::process::exit(0);
+                }
+                if event.id == dark_item.id() {
+                    theme = "dark";
+                }
+                if event.id == light_item.id() {
+                    theme = "light";
+                }
             }
-            if event.id == dark_item.id() {
-                theme = "dark";
-            }
-            if event.id == light_item.id() {
-                theme = "light";
-            }
-        }
 
-        let now = std::time::Instant::now();
+            let now = std::time::Instant::now();
 
-        sys.refresh_cpu();
-        let avg = if last_refresh_cpu.elapsed().as_millis() < cpu_gap {
-            last_avg_cpu_usage
-        } else {
-            last_refresh_cpu = now;
-            let avg =
-                sys.cpus().iter().map(|i| i.cpu_usage()).sum::<f32>() / sys.cpus().len() as f32;
-            last_avg_cpu_usage = avg;
-            avg
-        };
-
-        let fps: u64 = get_fps(avg);
-        let ms = 1000 / fps;
-
-        if last_update_ts.elapsed().as_millis() >= ms.into() {
-            last_update_ts = now;
-            let list = match theme {
-                "dark" => &dark_cat_icons,
-                "light" => &light_cat_icons,
-                _ => &dark_cat_icons,
+            sys.refresh_cpu();
+            let avg = if last_refresh_cpu.elapsed().as_millis() < cpu_gap {
+                last_avg_cpu_usage
+            } else {
+                last_refresh_cpu = now;
+                let avg =
+                    sys.cpus().iter().map(|i| i.cpu_usage()).sum::<f32>() / sys.cpus().len() as f32;
+                last_avg_cpu_usage = avg;
+                avg
             };
-            let icon = &list[c % dark_cat_icons.len()];
-            c += 1;
-            tray_icon.set_icon(Some(icon.clone())).unwrap();
-        }
-    }).unwrap();
+
+            let fps: u64 = get_fps(avg);
+            let ms = 1000 / fps;
+
+            if last_update_ts.elapsed().as_millis() >= ms.into() {
+                last_update_ts = now;
+                let list = match theme {
+                    "dark" => &dark_cat_icons,
+                    "light" => &light_cat_icons,
+                    _ => &dark_cat_icons,
+                };
+                let icon = &list[c % dark_cat_icons.len()];
+                c += 1;
+                tray_icon.set_icon(Some(icon.clone())).unwrap();
+            }
+        })
+        .unwrap();
 }
