@@ -5,6 +5,8 @@ edition = "2021"
 repository = "https://github.com/ahaoboy/run-cat"
 homepage = "https://github.com/ahaoboy/run-cat"
 authors = ["ahaoboy"]
+license = "MIT"
+description = "A cute running cat animation on your windows taskbar."
 
 [dependencies]
 tray-icon = "0.14.3"
