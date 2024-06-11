@@ -12,7 +12,10 @@ description = "A cute running cat animation on your windows taskbar."
 tray-icon = "0.14.3"
 image = "0.25.1"
 sysinfo = "0.30.12"
+
+# TODO: update to 0.30
 winit = "0.29"
+
 
 [target."cfg(target_os = \"linux\")".dependencies]
 libappindicator = "0.9"
