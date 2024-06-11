@@ -1,6 +1,6 @@
 [package]
 name = "run-cat"
-version = "0.1.3"
+version = "0.1.2"
 edition = "2021"
 repository = "https://github.com/ahaoboy/run-cat"
 homepage = "https://github.com/ahaoboy/run-cat"
