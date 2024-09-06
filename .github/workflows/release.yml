@@ -8,9 +8,6 @@ on:
     tags:
       - v[0-9]+.*
 
-env:
-  RUSTFLAGS: -C target-feature=+crt-static
-
 jobs:
   create-release:
     runs-on: ubuntu-latest
@@ -27,6 +24,8 @@ jobs:
         include:
           - target: x86_64-pc-windows-msvc
             os: windows-latest
+            RUSTFLAGS: -C target-feature=+crt-static
+
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -35,3 +34,5 @@ jobs:
           bin: run-cat
           target: ${{ matrix.target }}
           token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          RUSTFLAGS: ${{ matrix.RUSTFLAGS }}
